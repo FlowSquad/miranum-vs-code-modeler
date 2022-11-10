@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
-import {FileSystemScanner} from "./lib/FileSystemScanner";
+import * as structure from './config/ProjectStructure.json';
+import {FileSystemScanner} from "./utils/FileSystemScanner";
+import {FileSystemWatcher} from "./utils/FileSystemWatcher";
 
 export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
@@ -12,7 +14,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
 
     public constructor(
         private readonly context: vscode.ExtensionContext
-    ) { }
+    ) {
+    }
 
     /**
      * Called when the custom editor / source file is opened
@@ -23,15 +26,14 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
     public async resolveCustomTextEditor(
         document: vscode.TextDocument,
         webviewPanel: vscode.WebviewPanel,
-        token: vscode.CancellationToken): Promise<void>
-    {
+        token: vscode.CancellationToken): Promise<void> {
         let isUpdateFromWebview = false;
 
         webviewPanel.webview.options = {
             enableScripts: true
         };
 
-        const fileSystemScanner = new FileSystemScanner(vscode.Uri.parse(this.getProjectUri(document.uri.toString())));
+        const fileSystemScanner = new FileSystemScanner(this.getProjectUri(document.uri.toString()));
         fileSystemScanner.getAllFiles()
             .then((result) => {
                 webviewPanel.webview.html =
@@ -63,8 +65,35 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
             }
         });
 
+        const watcher = new FileSystemWatcher(this.getProjectUri(document.uri.toString()));
+        try {
+            watcher.registerWatcher(
+                structure.elementTemplates.path,
+                structure.elementTemplates.filePattern,
+            );
+            watcher.subscribe(webviewPanel.webview);
+        }
+        catch (error) {
+            watcher.subscribe(webviewPanel.webview);
+        }
+
+        /*
+        const watcher = vscode.workspace.createFileSystemWatcher(
+            new vscode.RelativePattern(vscode.Uri.joinPath(
+                    this.getProjectUri(document.uri.toString()),
+                    'element-templates'
+                ),
+                '*.json')
+        );
+
+        watcher.onDidCreate((event) => {
+            console.log('onDidCreate', event);
+        });
+        */
+
         webviewPanel.onDidDispose(() => {
             changeDocumentSubscription.dispose();
+            //watcher.dispose();
         });
     }
 
@@ -160,8 +189,8 @@ export class BpmnModeler implements vscode.CustomTextEditorProvider {
         return vscode.workspace.applyEdit(edit);
     }
 
-    private getProjectUri(path: string): string {
+    private getProjectUri(path: string): vscode.Uri {
         const filename = path.replace(/^.*[\\\/]/, '');
-        return path.substring(0, path.indexOf(filename));
+        return vscode.Uri.parse(path.substring(0, path.indexOf(filename)));
     }
 }

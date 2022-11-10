@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as structure from "../config/ProjectStructure.json";
 
 /**
  * Scan the current working directory for important files.
@@ -27,7 +28,7 @@ export class FileSystemScanner {
      * Get element templates from the current working directory
      */
     public getElementTemplates(): Thenable<Array<JSON>> {
-        const uri = vscode.Uri.joinPath(this.projectUri, 'element-templates');
+        const uri = vscode.Uri.joinPath(this.projectUri, structure.elementTemplates.path);
         return this.getResultsAsJson(this.readFile(uri));
     }
 
@@ -35,7 +36,7 @@ export class FileSystemScanner {
      * Get forms from the current working directory
      */
     public getForms(): Thenable<Array<JSON>> {
-        const uri = vscode.Uri.joinPath(this.projectUri, 'forms');
+        const uri = vscode.Uri.joinPath(this.projectUri, structure.forms.path);
         return this.getResultsAsJson(this.readFile(uri));
     }
 

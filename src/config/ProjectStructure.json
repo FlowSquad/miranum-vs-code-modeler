@@ -1,0 +1,18 @@
+{
+  "configurationFiles": {
+    "path": "configs",
+    "filePattern": "*.json"
+  },
+  "elementTemplates": {
+    "path": "element-templates",
+    "filePattern": "*.json"
+  },
+  "forms": {
+    "path": "forms",
+    "filePattern": "*.forms"
+  },
+  "dmn": {
+    "path": "",
+    "filePattern": "*.dmn"
+  }
+}
